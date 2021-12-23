@@ -56,3 +56,7 @@ dkms.conf
 
 # Idea
 .idea
+
+# Exe
+.exe
+*.exe
