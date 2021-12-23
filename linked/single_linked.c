@@ -8,10 +8,10 @@ typedef struct Node {
     ElemType data;
     // 下一个节点
     struct Node *next;
-} List;
+} List, *LinkedList;
 
 // 定义链表
-typedef struct Node *LinkedList; 
+// typedef struct Node *LinkedList; 
 
 /**
  * 构造有头单链表
@@ -59,16 +59,31 @@ void traverse(LinkedList linkedList) {
 }
 
 /**
- * 删除第i个元素
+ * 删除某个元素
 */
+void delete(LinkedList linkedList, ElemType data) {
+    LinkedList q = linkedList;
+    while (q->next != NULL && q->next->data != data) {
+        q = q->next;
+    }
+    if (q != NULL) {
+        q->next = q->next->next;
+        free(q->next);
+    }
+}
+
 
 void main() {
     LinkedList linkedList = create();
     for (int i = 0; i < 10; i++)
     {
         tailInsert(linkedList, i);
-        headInsert(linkedList, i);
+        // headInsert(linkedList, i);
     }
-    
+    printf("删除前\n");
     traverse(linkedList);
+    delete(linkedList, 2);
+    printf("\n删除后\n");
+    traverse(linkedList);
+
 }
