@@ -50,8 +50,8 @@ void tailInsert(LinkedList linkedList, ElemType data) {
 /**
  * 遍历
  */
-void traverse(LinkedList linkedList) {
-    LinkedList q = linkedList->next;
+void traverse(struct Node *head) {
+    struct Node *q = head->next;
     while (q != NULL) {
         printf("%d,", q->data);
         q = q->next;
@@ -72,6 +72,16 @@ void delete(LinkedList linkedList, ElemType data) {
     }
 }
 
+/**
+ * 单链表倒置
+*/
+void reversal(LinkedList linkedList) {
+    LinkedList q = create();
+    LinkedList p = linkedList->next;
+    while (p != NULL) {
+        
+    }
+}
 
 void main() {
     LinkedList linkedList = create();
