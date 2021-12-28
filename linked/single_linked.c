@@ -93,6 +93,23 @@ LinkedList reversal(LinkedList linkedList) {
     return q;
 }
 
+/**
+ * 单链表倒置，第二个方式，不需要新增额外的链表
+*/
+void reversal2(LinkedList linkedList) {
+    LinkedList q;
+    LinkedList p = linkedList->next;
+    linkedList->next = NULL;
+    while (p != NULL) {
+        q = p->next;
+        p->next = linkedList->next;
+        linkedList->next = p;
+        p = q;
+
+    }
+    
+}
+
 void main() {
     LinkedList linkedList = create();
     for (int i = 0; i < 10; i++)
@@ -102,8 +119,9 @@ void main() {
     }
     printf("倒置前\n");
     traverse(linkedList);
-    LinkedList reversalLinkedList = reversal(linkedList);
+    reversal2(linkedList);
     printf("\n倒置后\n");
-    traverse(reversalLinkedList);
+    traverse(linkedList);
+    
 
 }
