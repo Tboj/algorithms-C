@@ -75,12 +75,22 @@ void delete(LinkedList linkedList, ElemType data) {
 /**
  * 单链表倒置
 */
-void reversal(LinkedList linkedList) {
+LinkedList reversal(LinkedList linkedList) {
     LinkedList q = create();
     LinkedList p = linkedList->next;
     while (p != NULL) {
-        
+        // 直接在linkedList链表上把p剔除，防止后面p的指向改变导致linkedList链表断裂
+        linkedList->next = p->next;
+
+        // p的后继指到q的第一个节点，头插
+        p->next = q->next;
+        // q的第一个节点指向p
+        q->next = p;
+
+        // 继续遍历linkedList
+        p = linkedList->next;
     }
+    return q;
 }
 
 void main() {
@@ -90,10 +100,10 @@ void main() {
         tailInsert(linkedList, i);
         // headInsert(linkedList, i);
     }
-    printf("删除前\n");
+    printf("倒置前\n");
     traverse(linkedList);
-    delete(linkedList, 2);
-    printf("\n删除后\n");
-    traverse(linkedList);
+    LinkedList reversalLinkedList = reversal(linkedList);
+    printf("\n倒置后\n");
+    traverse(reversalLinkedList);
 
 }
