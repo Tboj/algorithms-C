@@ -16,7 +16,7 @@ typedef struct Node *LinkedList;
 /**
  * 构造有头单循环链表
 */
-struct List* create() {
+struct Node* create() {
     struct Node *q = (struct Node*)malloc(sizeof(struct Node));
     q->data = NULL;
     q->next = q;
@@ -26,29 +26,29 @@ struct List* create() {
 /**
  * 头插法
 */
-void headInsert(struct Node *q, ElemType data) {
+void headInsert(struct Node *h, ElemType data) {
     struct Node *p = (struct Node*)malloc(sizeof(struct Node));
     p->data = data;
-    p->next = q->next;
-    q->next = p;
+    p->next = h->next;
+    h->next = p;
 }
 
 /**
  * 尾插法
 */
-void tailInsert(LinkedList linkedList, ElemType data) {
-    LinkedList q = malloc(sizeof(LinkedList));
-    q->data = data;
-    q->next = NULL;
-    LinkedList p = linkedList;
-    while (p->next != NULL) {
-        p = p->next;
+void tailInsert(struct Node *h, ElemType data) {
+    struct Node *q = h;
+    struct Node *p = (struct Node*)malloc(sizeof(struct Node));
+    p->data = data;
+    p->next = h;
+    while (q->next != h) {
+        q = q->next;
     }
-    p->next = q;
+    q->next = p;
 }
 
 /**
- * 遍历
+ * 单循环链表遍历
  */
 void traverse(struct Node *head) {
     struct Node *q = head->next;
@@ -61,32 +61,46 @@ void traverse(struct Node *head) {
 /**
  * 删除某个元素
 */
-void delete(LinkedList linkedList, ElemType data) {
-    LinkedList q = linkedList;
-    while (q->next != NULL && q->next->data != data) {
+void delete(struct Node *h, ElemType data) {
+    struct Node *q = h;
+    while (q->next != h && q->next->data != data) {
         q = q->next;
     }
-    if (q != NULL) {
-        q->next = q->next->next;
-        free(q->next);
-    }
+    struct Node *p = q->next;
+    q->next = q->next->next;
+    free(p);
 }
 
 /**
- * 单链表倒置
+ * 倒置
 */
-void reversal(LinkedList linkedList) {
-    LinkedList q = create();
-    LinkedList p = linkedList->next;
-    while (p != NULL) {
-        
+void reversal(struct Node *h) {
+    struct Node *q = h->next;
+    h->next = h;
+
+    while (q != h) {
+        struct Node *p = q->next;
+        q->next = h->next;
+        h->next = q;
+        q = p;
     }
 }
 
 void main() {
-    LinkedList linkedList = create();
-    headInsert(linkedList, 1);
-    headInsert(linkedList, 2);
-    headInsert(linkedList, 3);
+    struct Node *linkedList = create();
+    // headInsert(linkedList, 1);
+    // headInsert(linkedList, 2);
+    // headInsert(linkedList, 3);
+    tailInsert(linkedList, 1);
+    tailInsert(linkedList, 2);
+    tailInsert(linkedList, 3);
+    tailInsert(linkedList, 4);
+    tailInsert(linkedList, 5);
+    printf("删除前\n");
+    traverse(linkedList);
+    // delete(linkedList, 3);
+    // printf("\n删除后\n");
+    reversal(linkedList);
+    printf("\n倒置后\n");
     traverse(linkedList);
 }
