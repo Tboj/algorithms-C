@@ -8,6 +8,7 @@
             "args": [
                 "-g",
                 "${file}",
+                "${workspaceFolder}\\lib\\sqlite3.c",
                 "-o",
                 "${workspaceFolder}\\exe\\${fileBasenameNoExtension}.exe"//把生成的.exe文件放到exe文件夹中
             ],
