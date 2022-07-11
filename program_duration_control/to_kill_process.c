@@ -10,12 +10,6 @@ int main()
 		exit(1);
 	}
 	while (fgets(buf, 255, fp) != NULL) {
-        // char *temp = strtok(buf, " ");
-        // while (temp)
-        // {
-        //     printf("%s - ", temp);
-        //     temp = strtok(buf, "\n");
-        // } 
         char *revbuf[100] = {0};
         int num = 0;
         split(buf," ",revbuf,&num);
