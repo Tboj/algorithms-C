@@ -4,6 +4,10 @@
 #include "lib\sqlite3.h"
 #include <time.h>
 
+#define PROGRAM_NUM(program_list) (sizeof(program_list) / sizeof((program_list)[0]))
+
+void split(char *src,const char *separator,char **dest,int *num);
+
 /**
  * 每1分钟扫描一次
  * 如果存在进程
@@ -21,13 +25,14 @@ sqlite3 *db;
 struct tm *now;
 time_t now_timestamp;
 
-long allow_duration_ordinary = 2*60*60*1000;
-long allow_duration_day_off = 5*60*60*1000;
+// long allow_duration_ordinary = 2*60;
+long allow_duration_ordinary = 10;
+long allow_duration_day_off = 5*60;
 
 char *to_kill_pids[65525] = {0};
 int to_kill_pid_num = 0;
 
-char **program_list = {"chrome", "ToDesk"};
+char *program_list[] = {"TIM.exe"};
 
 typedef struct Program_duration {
     int id;
@@ -35,23 +40,26 @@ typedef struct Program_duration {
     int duration;
 } *PD;
 
-// After confirming program exists
-void get_store() {
-    char *sql;
-    sql = "select * from main";
-    // The logic is in the exec_db_CallBack
-    sql_exec(sql, &exec_db_CallBack);
+char *table = "CREATE TABLE IF NOT EXISTS \"main\" (\
+  \"id\" integer(20) NOT NULL,\
+  \"start_time\" TEXT,\
+  \"duration\" TEXT,\
+  PRIMARY KEY (\"id\")\
+);";
+
+void create() {
+    sql_exec(table, NULL);
 }
 
 PD parse_CallBack(int f_num, char **f_val, char **f_nume) {
     PD pd = malloc(sizeof(PD));
     for (int i = 0; i < f_num; i++) {
-        if (f_nume[i] == "id") 
-            pd->id = f_val[i];
-        else if ((f_nume[i] == "start_time"))
-            pd->start_time = f_val[i];
-        else if ((f_nume[i] == "duration"))
-            pd->duration = f_val[i];
+        if (strcmp(f_nume[i], "id") == 0) 
+            pd->id = atoi(f_val[i]);
+        else if (strcmp(f_nume[i], "start_time") == 0)
+            pd->start_time = atoi(f_val[i]);
+        else if (strcmp(f_nume[i], "duration") == 0)
+            pd->duration = atoi(f_val[i]);
     }
     return pd;
 }
@@ -71,6 +79,38 @@ int exec_db_CallBack(void *para, int f_num, char **f_val, char **f_nume) {
     // update
     update_for_new_day(pd->id);
     return 0;
+}
+
+int count() {
+    char *count_sql = "SELECT count(*) as count FROM main";
+    char **result, *errmsg;
+    int nrow, ncolumn, i, j, index;
+    if (sqlite3_get_table(db, count_sql, &result, &nrow, &ncolumn, &errmsg) != 0) {
+        printf("error : %s\n", errmsg);
+        sqlite3_free(errmsg);
+    }
+    char *s = result[0];
+    int count = atoi(result[1]);
+    return count;
+    
+}
+
+void foo(char ***result, int nrow, int ncolumn) {
+    
+}
+
+// After confirming program exists
+void handle() {
+    if (!count()) {
+        insert();
+        return;
+    }
+
+    char *sql;
+    sql = "select * from main";
+    // The logic is in the exec_db_CallBack
+    sql_exec(sql, &exec_db_CallBack);
+
 }
 
 void update_for_new_day(int id) {
@@ -115,7 +155,8 @@ int is_today(long t_time) {
 void sql_exec(char *sql, sqlite3_callback Callback) {
     char *errmsg;
     // int nRes = sqlite3_exec(db, sql, exec_db_CallBack, NULL, &errmsg);
-    if (sqlite3_exec(db, sql, Callback, NULL, &errmsg) != 0)  {
+    char *s;
+    if (sqlite3_exec(db, sql, Callback, s, &errmsg) != 0)  {
         printf("error: %s\n", sqlite3_errmsg(db));
     }
     printf("\n");
@@ -144,29 +185,60 @@ void kill() {
     }
 }
 
-void get_to_kill_pids() {
+/**
+ * 追加到 to_kill_pids ， 总数to_kill_pid_num也追加
+ **/
+void get_to_kill_pids_real(char *program) {
     FILE *fp;
     //TODO program list
-    char *command[65525];
-    sprintf();
-    if ((fp = _popen("tasklist | find /i \"chrome.exe\"", "r")) == NULL) {
+    char command[65525];
+    sprintf(command, "tasklist | find \"%s\"", program);
+    if ((fp = _popen(command, "r")) == NULL) {
         perror("Fail to Open\n");
-        return 1;
+        return;
     }
 
-    char *buf[65525] = {0};
-    empty();
-    while (fgets(buf, 65525, fp) != NULL) {
+    char buf[255] = {0};
+    while (fgets(buf, 255, fp) != NULL) {
         char *revbuf[100] = {0};
-        split(buf," ", to_kill_pids, &to_kill_pid_num);
+        int num;
+        split(buf," ", revbuf, &num);
+        push(to_kill_pids, revbuf[1], 65525);
+        to_kill_pid_num++;
     }
 }
 
-void empty() {
+int get_to_kill_pids() {
+    empty_to_kill_pids();
+    int flag = 0;
+    int c = PROGRAM_NUM(program_list);
+    for (int i = 0; i < PROGRAM_NUM(program_list); i++) {
+        if (program_list[i] != 0) {
+            get_to_kill_pids_real(program_list[i]);
+            flag = 1;
+        }
+    }
+    return flag;
+}
+
+void push(char *dest[], char *str, int d_num) {
+    int offset = 0;
+    for (int i = 0; i < d_num; i++) {
+        if (dest[i] == NULL || dest[i] == 0) {
+            offset = i;
+            break;
+        }
+    }
+    if (offset < d_num) {
+        dest[offset] = str;
+    }
+}
+
+void empty_to_kill_pids() {
+    to_kill_pid_num = 0;
     for (int i = 0; i < 65525; i++) {
         to_kill_pids[i] = 0;
     }
-    
 }
 
 void split(char *src,const char *separator,char **dest,int *num) {
@@ -185,12 +257,30 @@ void split(char *src,const char *separator,char **dest,int *num) {
     *num = count;
 }
 
-int main() {
-    time(&now_timestamp);
-    now = localtime(&now_timestamp);
-
-    if (exec_command("tasklist | find /i \"chrome.exe\"", "r") == 0) {
-        int r = sqlite3_open("program_duration_control/program_duration_control.db", &db);
-        get_store();
+int open_sqlite3() {
+    int r = sqlite3_open("program_duration_control/program_duration_control.db", &db);
+    if (r < 0) {
+        printf("fail to sqlite3_open : %s\n", sqlite3_errmsg(db));
+        return 0;
     }
+    create();
+    return 1;
+}
+
+int main() {
+    while (1)
+    {
+        if (open_sqlite3()) {
+            time(&now_timestamp);
+            now = localtime(&now_timestamp);
+
+
+            int flag = get_to_kill_pids();
+            if (flag) {
+                handle();
+            }
+        }
+        _sleep(2000);
+    }
+    
 }
